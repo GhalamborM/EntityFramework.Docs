@@ -1,13 +1,13 @@
 ---
 title: Reverse Engineering - EF Core
 description: Reverse engineering a model from an existing database using Entity Framework Core
-author: bricelam
+author: SamMonoRT
 ms.date: 03/27/2023
 uid: core/managing-schemas/scaffolding
 ---
 # Scaffolding (Reverse Engineering)
 
-Reverse engineering is the process of scaffolding entity type classes and a `DbContext` class based on a database schema. It can be performed using the `Scaffold-DbContext` command of the EF Core Package Manager Console (PMC) tools or the `dotnet ef dbcontext scaffold` command of the .NET Command-line Interface (CLI) tools.
+Reverse engineering is the process of scaffolding entity type classes and a [DbContext](/dotnet/api/microsoft.entityframeworkcore.dbcontext) class based on a database schema. It can be performed using the `Scaffold-DbContext` command of the EF Core Package Manager Console (PMC) tools or the `dotnet ef dbcontext scaffold` command of the .NET Command-line Interface (CLI) tools.
 
 > [!NOTE]
 > The scaffolding of a `DbContext` and entity types documented here is distinct from the [scaffolding of controllers in ASP.NET Core](/aspnet/mvc/overview/getting-started/introduction/adding-a-controller) using Visual Studio, which is not documented here.
@@ -27,13 +27,15 @@ Both the PMC and the .NET CLI commands have two required arguments: the connecti
 
 ### Connection string
 
-The first argument to the command is a connection string to the database. The tools will use this connection string to read the database schema.
+[!INCLUDE [managed-identities-test-non-production](~/core/includes/managed-identities-test-non-production.md)]
 
-How you quote and escape the connection string depends on which shell you are using to execute the command; refer to your shell's documentation for more information. For example, PowerShell requires you to escape the `$` character, but not `\`.
+The first argument to the command is a connection string to the database. The tools use this connection string to read the database schema.
+
+How the connection string is quoted and escaped depends on the shell that is used to run the command. Refer to the shell's documentation. For example, PowerShell requires escaping `$`, but not `\`.
 
 The following example scaffolds entity types and a `DbContext` from the `Chinook` database located on the machine's SQL Server LocalDB instance, making use of the `Microsoft.EntityFrameworkCore.SqlServer` database provider.
 
-#### [.NET Core CLI](#tab/dotnet-core-cli)
+#### [.NET CLI](#tab/dotnet-core-cli)
 
 ```dotnetcli
 dotnet ef dbcontext scaffold "Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Chinook" Microsoft.EntityFrameworkCore.SqlServer
@@ -47,67 +49,8 @@ Scaffold-DbContext 'Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Chinook' 
 
 ***
 
-#### User secrets for connection strings
-
-If you have a .NET application that uses the hosting model and configuration system, such as an ASP.NET Core project, then you can use the `Name=<connection-string>` syntax to read the connection string from configuration.
-
-For example, consider an ASP.NET Core application with the following configuration file:
-
-```json
-{
-  "ConnectionStrings": {
-    "Chinook": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Chinook"
-  }
-}
-```
-
-This connection string in the config file can be used to scaffold from a database using:
-
-#### [.NET Core CLI](#tab/dotnet-core-cli)
-
-```dotnetcli
-dotnet ef dbcontext scaffold "Name=ConnectionStrings:Chinook" Microsoft.EntityFrameworkCore.SqlServer
-```
-
-#### [Visual Studio PMC](#tab/vs)
-
-```powershell
-Scaffold-DbContext 'Name=ConnectionStrings:Chinook' Microsoft.EntityFrameworkCore.SqlServer
-```
-
-***
-
-However, storing connection strings in configuration files is not a good idea, since it is too easy to accidentally expose them, for example, by pushing to source control. Instead, connection strings should be stored in a secure way, such as using [Azure Key Vault](/azure/key-vault/keys/quick-create-net) or, when working locally, the [Secret Manager tool](/aspnet/core/security/app-secrets#secret-manager), aka "User Secrets".
-
-For example, to use the User Secrets, first remove the connection string from your ASP.NET Core configuration file. Next, initialize User Secrets by executing the following command in the same directory as the ASP.NET Core project:
-
-```dotnetcli
-dotnet user-secrets init
-```
-
-This command sets up storage on your computer separate from your source code and adds a key for this storage to the project.
-
-Next, store the connection string in user secrets. For example:
-
-```dotnetcli
-dotnet user-secrets set ConnectionStrings:Chinook "Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Chinook"
-```
-
-Now the same command that previous used the named connection string from the config file will instead use the connection string stored in User Secrets. For example:
-
-#### [.NET Core CLI](#tab/dotnet-core-cli)
-
-```dotnetcli
-dotnet ef dbcontext scaffold "Name=ConnectionStrings:Chinook" Microsoft.EntityFrameworkCore.SqlServer
-```
-
-#### [Visual Studio PMC](#tab/vs)
-
-```powershell
-Scaffold-DbContext 'Name=ConnectionStrings:Chinook' Microsoft.EntityFrameworkCore.SqlServer
-```
-
-***
+> [!TIP]
+> You can [use Configuration to store and retrieve the connection string](xref:core/miscellaneous/connection-strings#aspnet-core)
 
 #### Connection strings in the scaffolded code
 
@@ -230,6 +173,7 @@ public partial class Post
     public DateTime? _2DeletedOn { get; set; }
     public int BlogId { get; set; }
     public virtual Blog Blog { get; set; } = null!;
+    public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }
 ```
 
@@ -400,7 +344,7 @@ public partial class Post
 
     public virtual Blog Blog { get; set; } = null!;
 
-    public virtual ICollection<Tag> Tags { get; set; }
+    public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }
 -->
 [!code-csharp[Post](../../../../samples/core/Miscellaneous/NewInEFCore6/ScaffoldingSample.cs?name=Post)]
@@ -446,7 +390,7 @@ public partial class Post
 
     public virtual Blog Blog { get; set; } = null!;
 
-    public virtual ICollection<Tag> Tags { get; set; }
+    public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }
 -->
 [!code-csharp[Post](../../../../samples/core/Miscellaneous/NewInEFCore6/ScaffoldingSample.cs?name=Post)]
@@ -460,7 +404,7 @@ And a class for Tag:
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
 
-        public virtual ICollection<Post> Posts { get; set; }
+        public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
     }
 -->
 [!code-csharp[Tag](../../../../samples/core/Miscellaneous/NewInEFCore6/ScaffoldingSample.cs?name=Tag)]
@@ -503,7 +447,7 @@ With this approach, the scaffolded code provides a starting point for code-based
 Keeping the database and the EF model in sync can be done in one of two ways:
 
 - Switch to using [EF Core database migrations](xref:core/managing-schemas/migrations/index), and use the entity types and EF model configuration as the source of truth, using migrations to drive the schema.
-- Manually update the entity types amd EF configuration when the database changes. For example, if a new column is added to a table, then add a property for the column to the mapped entity type, and add any necessary configuration using mapping attributes and/or code in `OnModelCreating`. This is relatively easy, with the only real challenge being a process to make sure that database changes are recorded or detected in some way so that the developer(s) responsible for the code can react.
+- Manually update the entity types and EF configuration when the database changes. For example, if a new column is added to a table, then add a property for the column to the mapped entity type, and add any necessary configuration using mapping attributes and/or code in `OnModelCreating`. This is relatively easy, with the only real challenge being a process to make sure that database changes are recorded or detected in some way so that the developer(s) responsible for the code can react.
 
 #### Repeated scaffolding
 

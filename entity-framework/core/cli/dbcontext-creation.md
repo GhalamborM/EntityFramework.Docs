@@ -1,7 +1,7 @@
 ---
 title: Design-time DbContext Creation - EF Core
 description: Strategies for creating a design-time DbContext with Entity Framework Core
-author: bricelam
+author: SamMonoRT
 ms.date: 10/27/2020
 uid: core/cli/dbcontext-creation
 ---
@@ -30,7 +30,7 @@ If the DbContext can't be obtained from the application service provider, the to
 
 ## From a design-time factory
 
-You can also tell the tools how to create your DbContext by implementing the <xref:Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory%601?displayProperty=nameWithType> interface: If a class implementing this interface is found in either the same project as the derived `DbContext` or in the application's startup project, the tools bypass the other ways of creating the DbContext and use the design-time factory instead.
+You can also tell the tools how to create your DbContext by implementing the <xref:Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory`1?displayProperty=nameWithType> interface: If a class implementing this interface is found in either the same project as the derived `DbContext` or in the application's startup project, the tools bypass the other ways of creating the DbContext and use the design-time factory instead.
 
 [!code-csharp[Main](../../../samples/core/Miscellaneous/CommandLine/BloggingContextFactory.cs#BloggingContextFactory)]
 
@@ -38,7 +38,7 @@ A design-time factory can be especially useful if you need to configure the `DbC
 
 ## Args
 
-Both <xref:Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory%601.CreateDbContext%2A?displayProperty=nameWithType> and `Program.CreateHostBuilder` accept command line arguments.
+Both <xref:Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory`1.CreateDbContext*?displayProperty=nameWithType> and `Program.CreateHostBuilder` accept command line arguments.
 
 You can specify these arguments from the tools:
 

@@ -1,19 +1,22 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace EFQuerying.RawSQL;
 
+#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
 internal class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         using (var context = new BloggingContext())
         {
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
+            await context.Database.EnsureDeletedAsync();
+            await context.Database.EnsureCreatedAsync();
 
-            context.Database.ExecuteSqlRaw(
+            await context.Database.ExecuteSqlRawAsync(
                 @"create function [dbo].[SearchBlogs] (@searchTerm nvarchar(max))
                           returns @found table
                           (
@@ -33,13 +36,13 @@ internal class Program
                                   return
                           end");
 
-            context.Database.ExecuteSqlRaw(
+            await context.Database.ExecuteSqlRawAsync(
                 @"create procedure [dbo].[GetMostPopularBlogs] as
                           begin
                               select * from dbo.Blogs order by Rating
                           end");
 
-            context.Database.ExecuteSqlRaw(
+            await context.Database.ExecuteSqlRawAsync(
                 @"create procedure [dbo].[GetMostPopularBlogsForUser] @filterByUser nvarchar(max) as
                           begin
                               select * from dbo.Blogs order by Rating
@@ -48,128 +51,104 @@ internal class Program
 
         using (var context = new BloggingContext())
         {
-            #region FromSql
-            var blogs = context.Blogs
+            var blogs = await context.Blogs
                 .FromSql($"SELECT * FROM dbo.Blogs")
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
         using (var context = new BloggingContext())
         {
-            #region FromSqlStoredProcedure
-            var blogs = context.Blogs
+            var blogs = await context.Blogs
                 .FromSql($"EXECUTE dbo.GetMostPopularBlogs")
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
         using (var context = new BloggingContext())
         {
-            #region FromSqlStoredProcedureParameter
             var user = "johndoe";
 
-            var blogs = context.Blogs
+            var blogs = await context.Blogs
                 .FromSql($"EXECUTE dbo.GetMostPopularBlogsForUser {user}")
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
         using (var context = new BloggingContext())
         {
-            #region FromSqlStoredProcedureNamedSqlParameter
-            var user = new SqlParameter("user", "johndoe");
+            var user = new SqliteParameter("user", "johndoe");
 
-            var blogs = context.Blogs
+            var blogs = await context.Blogs
                 .FromSql($"EXECUTE dbo.GetMostPopularBlogsForUser @filterByUser={user}")
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
         using (var context = new BloggingContext())
         {
-            #region FromSqlStoredProcedureSqlParameter
-            var user = new SqlParameter("user", "johndoe");
+            var user = new SqliteParameter("user", "johndoe");
 
-            var blogs = context.Blogs
+            var blogs = await context.Blogs
                 .FromSql($"EXECUTE dbo.GetMostPopularBlogsForUser {user}")
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
         using (var context = new BloggingContext())
         {
-            #region FromSqlRawStoredProcedureParameter
             var columnName = "Url";
-            var columnValue = new SqlParameter("columnValue", "http://SomeURL");
+            var columnValue = new SqliteParameter("columnValue", "http://SomeURL");
 
-            var blogs = context.Blogs
+            var blogs = await context.Blogs
                 .FromSqlRaw($"SELECT * FROM [Blogs] WHERE {columnName} = @columnValue", columnValue)
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
         using (var context = new BloggingContext())
         {
-            #region FromSqlComposed
             var searchTerm = "Lorem ipsum";
 
-            var blogs = context.Blogs
+            var blogs = await context.Blogs
                 .FromSql($"SELECT * FROM dbo.SearchBlogs({searchTerm})")
                 .Where(b => b.Rating > 3)
                 .OrderByDescending(b => b.Rating)
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
         using (var context = new BloggingContext())
         {
-            #region FromSqlInclude
             var searchTerm = "Lorem ipsum";
 
-            var blogs = context.Blogs
+            var blogs = await context.Blogs
                 .FromSql($"SELECT * FROM dbo.SearchBlogs({searchTerm})")
                 .Include(b => b.Posts)
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
         using (var context = new BloggingContext())
         {
-            #region FromSqlAsNoTracking
             var searchTerm = "Lorem ipsum";
 
-            var blogs = context.Blogs
+            var blogs = await context.Blogs
                 .FromSql($"SELECT * FROM dbo.SearchBlogs({searchTerm})")
                 .AsNoTracking()
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
         using (var context = new BloggingContext())
         {
-            #region SqlQuery
-            var ids = context.Database
+            var ids = await context.Database
                 .SqlQuery<int>($"SELECT [BlogId] FROM [Blogs]")
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
         using (var context = new BloggingContext())
         {
-            #region SqlQueryComposed
-            var overAverageIds = context.Database
+            var overAverageIds = await context.Database
                 .SqlQuery<int>($"SELECT [BlogId] AS [Value] FROM [Blogs]")
                 .Where(id => id > context.Blogs.Average(b => b.BlogId))
-                .ToList();
-            #endregion
+                .ToListAsync();
         }
 
-        #region ExecuteSql
         using (var context = new BloggingContext())
         {
-            var rowsModified = context.Database.ExecuteSql($"UPDATE [Blogs] SET [Url] = NULL");
+            var rowsModified = await context.Database.ExecuteSqlAsync($"UPDATE [Blogs] SET [Url] = NULL");
         }
-        #endregion
     }
 }

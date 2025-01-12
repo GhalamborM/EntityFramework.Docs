@@ -1,7 +1,7 @@
 ---
 title: Function Mappings - Microsoft SQL Server Database Provider - EF Core
 description: Function Mappings of the Microsoft SQL Server database provider
-author: bricelam
+author: SamMonoRT
 ms.date: 7/26/2023
 uid: core/providers/sql-server/functions
 ---
@@ -88,9 +88,11 @@ dateTime.Date                                               | CONVERT(date, @dat
 dateTime.Day                                                | DATEPART(day, @dateTime)
 dateTime.DayOfYear                                          | DATEPART(dayofyear, @dateTime)
 dateTime.Hour                                               | DATEPART(hour, @dateTime)
+dateTime.Microsecond                                        | DATEPART(microsecond, @dateTime) % 1000                                         | EF Core 10.0
 dateTime.Millisecond                                        | DATEPART(millisecond, @dateTime)
 dateTime.Minute                                             | DATEPART(minute, @dateTime)
 dateTime.Month                                              | DATEPART(month, @dateTime)
+dateTime.Nanosecond                                         | DATEPART(nanosecond, @dateTime) % 1000                                          | EF Core 10.0
 dateTime.Second                                             | DATEPART(second, @dateTime)
 dateTime.TimeOfDay                                          | CONVERT(time, @dateTime)
 dateTime.Year                                               | DATEPART(year, @dateTime)
@@ -107,20 +109,22 @@ dateTimeOffset.Date                                         | CONVERT(date, @dat
 dateTimeOffset.Day                                          | DATEPART(day, @dateTimeOffset)
 dateTimeOffset.DayOfYear                                    | DATEPART(dayofyear, @dateTimeOffset)
 dateTimeOffset.Hour                                         | DATEPART(hour, @dateTimeOffset)
+dateTimeOffset.Microsecond                                  | DATEPART(microsecond, @dateTimeOffset) % 1000                                   | EF Core 10.0
 dateTimeOffset.Millisecond                                  | DATEPART(millisecond, @dateTimeOffset)
 dateTimeOffset.Minute                                       | DATEPART(minute, @dateTimeOffset)
 dateTimeOffset.Month                                        | DATEPART(month, @dateTimeOffset)
+dateTimeOffset.Nanosecond                                   | DATEPART(nanosecond, @dateTimeOffset) % 1000                                    | EF Core 10.0
 dateTimeOffset.Second                                       | DATEPART(second, @dateTimeOffset)
 dateTimeOffset.TimeOfDay                                    | CONVERT(time, @dateTimeOffset)
 dateTimeOffset.ToUnixTimeSeconds()                          | DATEDIFF_BIG(second, '1970-01-01T00:00:00.0000000+00:00', @dateTimeOffset)      | EF Core 8.0
 dateTimeOffset.ToUnixTimeMilliseconds()                     | DATEDIFF_BIG(millisecond, '1970-01-01T00:00:00.0000000+00:00', @dateTimeOffset) | EF Core 8.0
 dateTimeOffset.Year                                         | DATEPART(year, @dateTimeOffset)
+DateOnly.FromDateTime(dateTime)                             | CONVERT(date, @dateTime)                                                        | EF Core 8.0
 dateOnly.AddDays(value)                                     | DATEADD(day, @value, @dateOnly)                                                 | EF Core 8.0
 dateOnly.AddMonths(months)                                  | DATEADD(month, @months, @dateOnly)                                              | EF Core 8.0
 dateOnly.AddYears(value)                                    | DATEADD(year, @value, @dateOnly)                                                | EF Core 8.0
 dateOnly.Day                                                | DATEPART(day, @dateOnly)                                                        | EF Core 8.0
 dateOnly.DayOfYear                                          | DATEPART(dayofyear, @dateOnly)                                                  | EF Core 8.0
-DateOnly.FromDateTime(dateTime)                             | CONVERT(date, @dateTime)                                                        | EF Core 8.0
 dateOnly.Month                                              | DATEPART(month, @dateOnly)                                                      | EF Core 8.0
 dateOnly.Year                                               | DATEPART(year, @dateOnly)                                                       | EF Core 8.0
 EF.Functions.AtTimeZone(dateTime, timeZone)                 | @dateTime AT TIME ZONE @timeZone                                                | EF Core 7.0
@@ -143,14 +147,18 @@ EF.Functions.SmallDateTimeFromParts(year, month, day, ...)  | SMALLDATETIMEFROMP
 EF.Functions.TimeFromParts(hour, minute, second, ...)       | TIMEFROMPARTS(@hour, @minute, @second, ...)
 timeOnly.AddHours(value)                                    | DATEADD(hour, @value, @timeOnly)                                                | EF Core 8.0
 timeOnly.AddMinutes(value)                                  | DATEADD(minute, @value, @timeOnly)                                              | EF Core 8.0
-timeOnly.Hours                                              | DATEPART(hour, @timeOnly)                                                       | EF Core 8.0
+timeOnly.Hour                                               | DATEPART(hour, @timeOnly)                                                       | EF Core 8.0
 timeOnly.IsBetween(start, end)                              | @timeOnly >= @start AND @timeOnly < @end                                        | EF Core 8.0
-timeOnly.Milliseconds                                       | DATEPART(millisecond, @timeOnly)                                                | EF Core 8.0
-timeOnly.Minutes                                            | DATEPART(minute, @timeOnly)                                                     | EF Core 8.0
-timeOnly.Seconds                                            | DATEPART(second, @timeOnly)                                                     | EF Core 8.0
+timeOnly.Microsecond                                        | DATEPART(microsecond, @timeOnly) % 1000                                         | EF Core 10.0
+timeOnly.Millisecond                                        | DATEPART(millisecond, @timeOnly)                                                | EF Core 8.0
+timeOnly.Minute                                             | DATEPART(minute, @timeOnly)                                                     | EF Core 8.0
+timeOnly.Nanosecond                                         | DATEPART(nanosecond, @timeOnly) % 1000                                          | EF Core 10.0
+timeOnly.Second                                             | DATEPART(second, @timeOnly)                                                     | EF Core 8.0
 timeSpan.Hours                                              | DATEPART(hour, @timeSpan)
+timeSpan.Microsecond                                        | DATEPART(microsecond, @timeSpan) % 1000                                         | EF Core 10.0
 timeSpan.Milliseconds                                       | DATEPART(millisecond, @timeSpan)
 timeSpan.Minutes                                            | DATEPART(minute, @timeSpan)
+timeSpan.Nanosecond                                         | DATEPART(nanosecond, @timeSpan) % 1000                                          | EF Core 10.0
 timeSpan.Seconds                                            | DATEPART(second, @timeSpan)
 
 ## Numeric functions
@@ -172,6 +180,8 @@ Math.Floor(d)              | FLOOR(@d)
 Math.Log(d)                | LOG(@d)
 Math.Log(a, newBase)       | LOG(@a, @newBase)
 Math.Log10(d)              | LOG10(@d)
+Math.Max(x, y)             | GREATEST(@x, @y)    | EF Core 9.0
+Math.Min(x, y)             | LEAST(@x, @y)       | EF Core 9.0
 Math.Pow(x, y)             | POWER(@x, @y)
 Math.Round(d)              | ROUND(@d, 0)
 Math.Round(d, decimals)    | ROUND(@d, @decimals)
@@ -202,6 +212,7 @@ string.Compare(strA, strB)                                              | CASE W
 string.Concat(str0, str1)                                               | @str0 + @str1
 string.IsNullOrEmpty(value)                                             | @value IS NULL OR @value LIKE N''
 string.IsNullOrWhiteSpace(value)                                        | @value IS NULL OR @value = N''
+string.Join(", ", new [] { x, y, z})                                    | CONCAT_WS(N', ', @x, @y, @z)                                           | EF Core 9.0
 stringValue.CompareTo(strB)                                             | CASE WHEN @stringValue = @strB THEN 0 ... END
 stringValue.Contains(value)                                             | @stringValue LIKE N'%' + @value + N'%'
 stringValue.EndsWith(value)                                             | @stringValue LIKE N'%' + @value
@@ -222,9 +233,8 @@ stringValue.TrimStart()                                                 | LTRIM(
 
 ## Miscellaneous functions
 
-.NET                                     | SQL
----------------------------------------- | ---
-collection.Contains(item)                | @item IN @collection
+.NET                                     | SQL                                 | Added in
+---------------------------------------- | ----------------------------------- | --------
 enumValue.HasFlag(flag)                  | @enumValue & @flag = @flag
 Guid.NewGuid()                           | NEWID()
 nullable.GetValueOrDefault()             | COALESCE(@nullable, 0)
