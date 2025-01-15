@@ -1,24 +1,25 @@
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace EFCollations;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         using (var db = new CustomerContext())
         {
-            db.Database.EnsureDeleted();
-            db.Database.EnsureCreated();
+            await db.Database.EnsureDeletedAsync();
+            await db.Database.EnsureCreatedAsync();
         }
 
         using (var context = new CustomerContext())
         {
             #region SimpleQueryCollation
-            var customers = context.Customers
+            var customers = await context.Customers
                 .Where(c => EF.Functions.Collate(c.Name, "SQL_Latin1_General_CP1_CS_AS") == "John")
-                .ToList();
+                .ToListAsync();
             #endregion
         }
     }
@@ -30,7 +31,7 @@ public class CustomerContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=EFCollations;Trusted_Connection=True");
+        optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=EFCollations;Trusted_Connection=True;ConnectRetryCount=0");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

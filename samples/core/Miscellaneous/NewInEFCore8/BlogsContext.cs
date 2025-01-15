@@ -27,8 +27,8 @@ public class Website
     }
 
     public Guid Id { get; private set; }
-    public Uri Uri { get; init; }
-    public string Email { get; init; }
+    public Uri Uri { get; private set; }
+    public string Email { get; private set; }
     public virtual Blog Blog { get; set; } = null!;
 }
 
@@ -171,7 +171,7 @@ public class PostUpdate
     }
 
     public IPAddress PostedFrom { get; private set; }
-    public string? UpdatedBy { get; init; }
+    public string? UpdatedBy { get; set; }
     public DateOnly UpdatedOn { get; private set; }
     public List<Commit> Commits { get; } = new();
 }
@@ -210,7 +210,7 @@ public abstract class BlogsContext : DbContext
         => (UseSqlite
                 ? optionsBuilder.UseSqlite(@$"DataSource={GetType().Name}.db")
                 : optionsBuilder.UseSqlServer(
-                    @$"Server=(localdb)\mssqllocaldb;Database={GetType().Name}",
+                    @$"Server=(localdb)\mssqllocaldb;Database={GetType().Name};ConnectRetryCount=0",
                     sqlServerOptionsBuilder => sqlServerOptionsBuilder.UseNetTopologySuite()))
             .EnableSensitiveDataLogging()
             .LogTo(

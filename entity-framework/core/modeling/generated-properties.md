@@ -66,15 +66,15 @@ Similarly, a property can be configured to have its value generated on add or up
 
 Unlike with default values or computed columns, we are not specifying *how* the values are to be generated; that depends on the database provider being used. Database providers may automatically set up value generation for some property types, but others may require you to manually set up how the value is generated.
 
-For example, on SQL Server, when a GUID property is configured as a primary key, the provider automatically performs value generation client-side, using an algorithm to generate optimal sequential GUID values. However, specifying <xref:Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder.ValueGeneratedOnAdd%2A> on a DateTime property will have no effect ([see the section below for DateTime value generation](#datetime-value-generation)).
+For example, on SQL Server, when a GUID property is configured as a primary key, the provider automatically performs value generation client-side, using an algorithm to generate optimal sequential GUID values. However, specifying <xref:Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder.ValueGeneratedOnAdd*> on a DateTime property will have no effect ([see the section below for DateTime value generation](#datetime-value-generation)).
 
-Similarly, byte[] properties that are configured as generated on add or update and marked as concurrency tokens are set up with the rowversion data type, so that values are automatically generated in the database. However, specifying <xref:Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder.ValueGeneratedOnAdd%2A> has no effect.
+Similarly, byte[] properties that are configured as generated on add or update and marked as concurrency tokens are set up with the rowversion data type, so that values are automatically generated in the database. However, specifying <xref:Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder.ValueGeneratedOnAdd*> has no effect.
 
 Consult your provider's documentation for the specific value generation techniques it supports. The SQL Server value generation documentation can be found [here](xref:core/providers/sql-server/value-generation).
 
 ## Date/time value generation
 
-A common request is to have a database column which contains the date/time for when the column was first inserted (value generated on add), or for when it was last updated (value generated on add or update). As there are various strategies to do this, EF Core providers usually don't set up value generation automatically for date/time columns - you have to configure this yourself.
+A common request is to have a database column which contains the date/time for when the row was first inserted (value generated on add), or for when it was last updated (value generated on add or update). As there are various strategies to do this, EF Core providers usually don't set up value generation automatically for date/time columns - you have to configure this yourself.
 
 ### Creation timestamp
 
@@ -97,14 +97,11 @@ BEGIN
 
     IF ((SELECT TRIGGER_NESTLEVEL()) > 1) RETURN;
 
-    DECLARE @Id INT
-
-    SELECT @Id = INSERTED.BlogId
-    FROM INSERTED
-
-    UPDATE dbo.Blogs
+    UPDATE B
     SET LastUpdated = GETDATE()
-    WHERE BlogId = @Id
+    FROM dbo.Blogs AS B
+    INNER JOIN INSERTED AS I
+        ON B.BlogId = I.BlogId
 END
 ```
 

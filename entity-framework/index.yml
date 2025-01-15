@@ -32,7 +32,7 @@ highlightedContent:
     # Card
     - title: "API reference browser"
       itemType: reference
-      url: /dotnet/api/?view=efcore-6.0&preserve-view=true
+      url: /dotnet/api/?view=efcore-8.0&preserve-view=true
     # Card
     - title: ".NET (C#) data documentation hub"
       itemType: reference
@@ -78,6 +78,10 @@ additionalContent:
             text: "MySQL and MariaDB"
           - url: core/providers/cosmos/index.md
             text: "Azure Cosmos DB for NoSQL"
+          - url: https://www.mongodb.com/docs/entity-framework/current/
+            text: "MongoDB"            
+          - url: https://github.com/FirebirdSQL/NETProvider
+            text: "Firebird"
           - url: core/providers/in-memory/index.md
             text: "In memory (testing)"
           - url: core/providers/index.md
@@ -214,7 +218,7 @@ additionalContent:
           - url: core/cli/services.md
             text: "Design-time services"
       # Card
-      - title: Previous Versions
+      - title: Previous versions
         links:
           - url: ef6/get-started.md
             text: "Entity Framework 6"

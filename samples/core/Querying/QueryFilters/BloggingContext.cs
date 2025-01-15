@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace EFQuerying.QueryFilters;
@@ -19,7 +21,7 @@ public class BloggingContext : DbContext
     {
         optionsBuilder
             .UseSqlServer(
-                @"Server=(localdb)\mssqllocaldb;Database=Querying.QueryFilters.Blogging;Trusted_Connection=True");
+                @"Server=(localdb)\mssqllocaldb;Database=Querying.QueryFilters.Blogging;Trusted_Connection=True;ConnectRetryCount=0");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -33,7 +35,7 @@ public class BloggingContext : DbContext
         #endregion
     }
 
-    public override int SaveChanges()
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         ChangeTracker.DetectChanges();
 
@@ -50,6 +52,6 @@ public class BloggingContext : DbContext
             item.CurrentValues["IsDeleted"] = true;
         }
 
-        return base.SaveChanges();
+        return await base.SaveChangesAsync(cancellationToken);
     }
 }

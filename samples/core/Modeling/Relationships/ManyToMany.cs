@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace EFModeling.Relationships;
@@ -34,13 +35,13 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
+            public List<Tag> Tags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
+            public List<Post> Posts { get; } = [];
         }
         #endregion
 
@@ -105,7 +106,7 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
+            public List<Tag> Tags { get; } = [];
         }
 
         public class Tag
@@ -172,13 +173,13 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
+            public List<Tag> Tags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
+            public List<Post> Posts { get; } = [];
         }
         #endregion
 
@@ -244,13 +245,13 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
+            public List<Tag> Tags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
+            public List<Post> Posts { get; } = [];
         }
         #endregion
 
@@ -336,13 +337,13 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
+            public List<Tag> Tags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
+            public List<Post> Posts { get; } = [];
         }
 
         public class PostTag
@@ -429,15 +430,15 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
-            public List<PostTag> PostTags { get; } = new();
+            public List<Tag> Tags { get; } = [];
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
-            public List<PostTag> PostTags { get; } = new();
+            public List<Post> Posts { get; } = [];
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class PostTag
@@ -524,15 +525,15 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
-            public List<PostTag> PostTags { get; } = new();
+            public List<Tag> Tags { get; } = [];
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
-            public List<PostTag> PostTags { get; } = new();
+            public List<Post> Posts { get; } = [];
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class PostTag
@@ -618,15 +619,15 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
-            public List<PostTag> PostTags { get; } = new();
+            public List<Tag> Tags { get; } = [];
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
-            public List<PostTag> PostTags { get; } = new();
+            public List<Post> Posts { get; } = [];
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class PostTag
@@ -700,14 +701,14 @@ public class ManyToMany
         {
             public int Id { get; set; }
             public int AlternateKey { get; set; }
-            public List<Tag> Tags { get; } = new();
+            public List<Tag> Tags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
             public int AlternateKey { get; set; }
-            public List<Post> Posts { get; } = new();
+            public List<Post> Posts { get; } = [];
         }
         #endregion
 
@@ -773,16 +774,16 @@ public class ManyToMany
         {
             public int Id { get; set; }
             public int AlternateKey { get; set; }
-            public List<Tag> Tags { get; } = new();
-            public List<PostTag> PostTags { get; } = new();
+            public List<Tag> Tags { get; } = [];
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
             public int AlternateKey { get; set; }
-            public List<Post> Posts { get; } = new();
-            public List<PostTag> PostTags { get; } = new();
+            public List<Post> Posts { get; } = [];
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class PostTag
@@ -855,13 +856,13 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
+            public List<Tag> Tags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
+            public List<Post> Posts { get; } = [];
         }
 
         public class PostTag
@@ -931,13 +932,13 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
+            public List<Tag> Tags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
+            public List<Post> Posts { get; } = [];
         }
         #endregion
 
@@ -1009,15 +1010,15 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
-            public List<PostTag> PostTags { get; } = new();
+            public List<Tag> Tags { get; } = [];
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
-            public List<PostTag> PostTags { get; } = new();
+            public List<Post> Posts { get; } = [];
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class PostTag
@@ -1092,13 +1093,13 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
+            public List<Tag> Tags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
+            public List<Post> Posts { get; } = [];
         }
         #endregion
 
@@ -1163,8 +1164,8 @@ public class ManyToMany
         public class Person
         {
             public int Id { get; set; }
-            public List<Person> Parents { get; } = new();
-            public List<Person> Children { get; } = new();
+            public List<Person> Parents { get; } = [];
+            public List<Person> Children { get; } = [];
         }
         #endregion
 
@@ -1221,7 +1222,7 @@ public class ManyToMany
         public class Person
         {
             public int Id { get; set; }
-            public List<Person> Friends { get; } = new();
+            public List<Person> Friends { get; } = [];
         }
         #endregion
 
@@ -1282,29 +1283,29 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<Tag> Tags { get; } = new();
-            public List<JoinType> PostTags { get; } = new();
+            public List<Tag> Tags { get; } = [];
+            public List<JoinType> PostTags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<Post> Posts { get; } = new();
-            public List<JoinType> PostTags { get; } = new();
+            public List<Post> Posts { get; } = [];
+            public List<JoinType> PostTags { get; } = [];
         }
 
         public class Blog
         {
             public int Id { get; set; }
-            public List<Author> Authors { get; } = new();
-            public List<JoinType> BlogAuthors { get; } = new();
+            public List<Author> Authors { get; } = [];
+            public List<JoinType> BlogAuthors { get; } = [];
         }
 
         public class Author
         {
             public int Id { get; set; }
-            public List<Blog> Blogs { get; } = new();
-            public List<JoinType> BlogAuthors { get; } = new();
+            public List<Blog> Blogs { get; } = [];
+            public List<JoinType> BlogAuthors { get; } = [];
         }
         #endregion
 
@@ -1386,11 +1387,11 @@ public class ManyToMany
 
     public class DirectJoinTableNoManyToMany
     {
-        public static void BuildModels()
+        public static async Task BuildModels()
         {
             using var context0 = new BlogContext0();
-            context0.Database.EnsureDeleted();
-            context0.Database.EnsureCreated();
+            await context0.Database.EnsureDeletedAsync();
+            await context0.Database.EnsureCreatedAsync();
 
             Console.WriteLine("Directly mapping the join table without creating a many-to-many relationship:");
             var modelDebugString = context0.Model.ToDebugString(indent: 2);
@@ -1402,13 +1403,13 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<PostTag> PostTags { get; } = new();
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<PostTag> PostTags { get; } = new();
+            public List<PostTag> PostTags { get; } = [];
         }
 
         public class PostTag
@@ -1439,11 +1440,11 @@ public class ManyToMany
 
     public class FullMappingWithJoinEntity
     {
-        public static void BuildModels()
+        public static async Task BuildModels()
         {
             using var context0 = new BlogContext0();
-            context0.Database.EnsureDeleted();
-            context0.Database.EnsureCreated();
+            await context0.Database.EnsureDeletedAsync();
+            await context0.Database.EnsureCreatedAsync();
 
             Console.WriteLine("Directly mapping the join table and including skip navigations for the many-to-many relationship:");
             var modelDebugString = context0.Model.ToDebugString(indent: 2);
@@ -1455,15 +1456,15 @@ public class ManyToMany
         public class Post
         {
             public int Id { get; set; }
-            public List<PostTag> PostTags { get; } = new();
-            public List<Tag> Tags { get; } = new();
+            public List<PostTag> PostTags { get; } = [];
+            public List<Tag> Tags { get; } = [];
         }
 
         public class Tag
         {
             public int Id { get; set; }
-            public List<PostTag> PostTags { get; } = new();
-            public List<Post> Posts { get; } = new();
+            public List<PostTag> PostTags { get; } = [];
+            public List<Post> Posts { get; } = [];
         }
 
         public class PostTag
