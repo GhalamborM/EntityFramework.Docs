@@ -1,7 +1,7 @@
 ---
 title: Breaking changes in EF Core 5.0 - EF Core
 description: Complete list of breaking changes introduced in Entity Framework Core 5.0
-author: bricelam
+author: SamMonoRT
 ms.date: 09/21/2022
 uid: core/what-is-new/ef-core-5.0/breaking-changes
 ---
@@ -656,16 +656,16 @@ For correlated collection scenarios we need to know entity's primary key in orde
 Rewrite the query to not use `GroupBy` or `Distinct` operations on the inner collection, and perform these operations on the client instead.
 
 ```csharp
-context.Parents
+(await context.Parents
     .Select(p => p.Children.Select(c => c.School))
-    .ToList()
+    .ToListAsync())
     .Select(x => x.GroupBy(c => c).Select(g => g.Key))
 ```
 
 ```csharp
-context.Parents
+(await context.Parents
     .Select(p => p.Children.Select(c => c.School))
-    .ToList()
+    .ToListAsync())
     .Select(x => x.Distinct())
 ```
 

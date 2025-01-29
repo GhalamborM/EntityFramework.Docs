@@ -1,14 +1,16 @@
 ---
 title: Breaking changes in EF Core 7.0 (EF7) - EF Core
 description: Complete list of breaking changes introduced in Entity Framework Core 7.0 (EF7)
-author: ajcvickers
-ms.date: 09/20/2022
+author: SamMonoRT
+ms.date: 09/20/2023
 uid: core/what-is-new/ef-core-7.0/breaking-changes
 ---
 
 # Breaking changes in EF Core 7.0 (EF7)
 
-The following API and behavior changes have the potential to break existing applications updating to EF Core 7.0.
+This page documents API and behavior changes that have the potential to break existing applications updating from EF Core 6 to EF Core 7. Make sure to review earlier breaking changes if updating from an earlier version of EF Core:
+
+- [Breaking changes in EF Core 6](xref:core/what-is-new/ef-core-6.0/breaking-changes)
 
 ## Target Framework
 
@@ -24,6 +26,7 @@ EF Core 7.0 targets .NET 6. This means that existing applications that target .N
 | [SQLite tables with AFTER triggers and virtual tables now require special EF Core configuration](#sqlitetriggers)                        | High       |
 | [Orphaned dependents of optional relationships are not automatically deleted](#optional-deletes)                                         | Medium     |
 | [Cascade delete is configured between tables when using TPT mapping with SQL Server](#tpt-cascade-delete)                                | Medium     |
+| [Higher chance of busy/locked errors on SQLite when not using write-ahead logging](#sqliteretries)                                       | Medium     |
 | [Key properties may need to be configured with a provider value comparer](#provider-value-comparer)                                      | Low        |
 | [Check constraints and other table facets are now configured on the table](#table-configuration)                                         | Low        |
 | [Navigations from new entities to deleted entities are not fixed up](#deleted-fixup)                                                     | Low        |
@@ -65,7 +68,7 @@ This change was made to ensure that, by default, either the connection is secure
 There are three ways to proceed:
 
 1. [Install a valid certificate on the server](/sql/database-engine/configure-windows/enable-encrypted-connections-to-the-database-engine). Note that this is an involved process and requires obtaining a certificate and ensuring it is signed by an authority trusted by the client.
-2. If the server has a certificate, but it is not trusted by the client, then `TrustServerCertificate=True` to allow bypassing the normal trust mechanims.
+2. If the server has a certificate, but it is not trusted by the client, then `TrustServerCertificate=True` to allow bypassing the normal trust mechanism.
 3. Explicitly add `Encrypt=False` to the connection string.
 
 > [!WARNING]
@@ -128,11 +131,21 @@ The performance improvements linked to the new method are significant enough tha
 
 #### Mitigations
 
-You can let EF Core know that the target table has a trigger; doing so will revert to the previous, less efficient technique. This can be done by configuring the corresponding entity type as follows:
+Starting with EF Core 8.0, the use or not of the "OUTPUT" clause can be configured explicitly. For example:
+
+```csharp
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Blog>()
+        .ToTable(tb => tb.UseSqlOutputClause(false));
+}
+```
+
+In EF7 or later, If the target table has a trigger, then you can let EF Core know this, and EF will revert to the previous, less efficient technique. This can be done by configuring the corresponding entity type as follows:
 
 [!code-csharp[Main](../../../../samples/core/SqlServer/Misc/TriggersContext.cs?name=TriggerConfiguration&highlight=4)]
 
-Note that doing this doesn't actually make EF Core create or manage the trigger in any way - it currently only informs EF Core that triggers are present on the table. As a result, any trigger name can be used, and this can also be used if an unsupported computed column is in use (regardless of triggers).
+Note that doing this doesn't actually make EF Core create or manage the trigger in any way - it currently only informs EF Core that triggers are present on the table. As a result, any trigger name can be used. Specifying a trigger can be used to revert the old behavior _even if there isn't actually a trigger in the table_.
 
 If most or all of your tables have triggers, you can opt out of using the newer, efficient technique for all your model's tables by using the following model building convention:
 
@@ -164,7 +177,17 @@ The simplifications and performance improvements linked to the new method are si
 
 #### Mitigations
 
-In EF Core 8.0, a mechanism will be introduced that will allow specifying whether to use the new mechanism on a table-by-table basis. With EF Core 7.0, it's possible to revert to the old mechanism for the entire application by inserting the following code in your context configuration:
+In EF Core 8.0, the `UseSqlReturningClause` method has been introduced to explicitly revert back to the older, less efficient SQL. For example:
+
+```csharp
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Blog>()
+        .ToTable(tb => tb.UseSqlReturningClause(false));
+}
+```
+
+If you are still using EF Core 7.0, then it's possible to revert to the old mechanism for the entire application by inserting the following code in your context configuration:
 
 ```c#
 protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -285,6 +308,67 @@ modelBuilder
     .HasForeignKey<FeaturedPost>(e => e.Id)
     .OnDelete(DeleteBehavior.ClientCascade);
 ```
+
+<a name="sqliteretries"></a>
+
+### Higher chance of busy/locked errors on SQLite when not using write-ahead logging
+
+#### Old behavior
+
+Previous versions of the SQLite provider saved changes via a less efficient technique which was able to automatically retry when the table was locked/busy and write-ahead logging (WAL) was not enabled.
+
+#### New behavior
+
+By default, EF Core now saves changes via a more efficient technique, using the RETURNING clause. Unfortunately, this technique is not able to automatically retry when busy/locked. In a multi-threaded application (like a web app) not using write-ahead logging, it is common to encounter these errors.
+
+#### Why
+
+The simplifications and performance improvements linked to the new method are significant enough that it's important to bring them to users by default. Databases created by EF Core also enable write-ahead logging by default. The SQLite team also recommends enabling write-ahead logging by default.
+
+#### Mitigations
+
+If possible, you should enable write-ahead logging on your database. If your database was created by EF, this should already be the case. If not, you can enable write-ahead logging by executing the following command.
+
+```sql
+PRAGMA journal_mode = 'wal';
+```
+
+If, for some reason, you can't enable write-ahead logging, it's possible to revert to the old mechanism for the entire application by inserting the following code in your context configuration:
+
+##### [EF Core 7.0](#tab/v7)
+
+```csharp
+protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    => optionsBuilder
+        .UseSqlite(...)
+        .ReplaceService<IUpdateSqlGenerator, SqliteLegacyUpdateSqlGenerator>();
+```
+
+##### [EF Core 8.0 and above](#tab/v8)
+
+```csharp
+protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+{
+    configurationBuilder.Conventions.Add(_ => new DoNotUseReturningClauseConvention());
+}
+```
+
+```csharp
+class DoNotUseReturningClauseConvention : IModelFinalizingConvention
+{
+    public void ProcessModelFinalizing(
+        IConventionModelBuilder modelBuilder,
+        IConventionContext<IConventionModelBuilder> context)
+    {
+        foreach (var entityType in modelBuilder.Metadata.GetEntityTypes())
+        {
+            entityType.UseSqlReturningClause(false);
+        }
+    }
+}
+```
+
+---
 
 ## Low-impact changes
 
@@ -429,11 +513,11 @@ Query or attach entities before marking entities as `Deleted`, or manually set n
 
 #### Old behavior
 
-In EF Core 6.0, using the Azure Cosmos DB <xref:Microsoft.EntityFrameworkCore.CosmosQueryableExtensions.FromSqlRaw%2A> extension method when using a relational provider, or the relational <xref:Microsoft.EntityFrameworkCore.RelationalQueryableExtensions.FromSqlRaw%2A> extension method when using the Azure Cosmos DB provider could silently fail.
+In EF Core 6.0, using the Azure Cosmos DB <xref:Microsoft.EntityFrameworkCore.CosmosQueryableExtensions.FromSqlRaw*> extension method when using a relational provider, or the relational <xref:Microsoft.EntityFrameworkCore.RelationalQueryableExtensions.FromSqlRaw*> extension method when using the Azure Cosmos DB provider could silently fail. Likewise, using relational methods on the in-memory provider is a silent no-op.
 
 #### New behavior
 
-Starting with EF Core 7.0, using the wrong extension method will throw an exception.
+Starting with EF Core 7.0, using an extension method designed for one provider on a different provider will throw an exception.
 
 #### Why
 
@@ -444,13 +528,13 @@ The correct extension method must be used for it to function correctly in all si
 Use the correct extension method for the provider being used. If multiple providers are referenced, then call the extension method as a static method. For example:
 
 ```csharp
-var result = CosmosQueryableExtensions.FromSqlRaw(context.Blogs, "SELECT ...").ToList();
+var result = await CosmosQueryableExtensions.FromSqlRaw(context.Blogs, "SELECT ...").ToListAsync();
 ```
 
 Or:
 
 ```csharp
-var result = RelationalQueryableExtensions.FromSqlRaw(context.Blogs, "SELECT ...").ToList();
+var result = await RelationalQueryableExtensions.FromSqlRaw(context.Blogs, "SELECT ...").ToListAsync();
 ```
 
 <a name="is-configured"></a>

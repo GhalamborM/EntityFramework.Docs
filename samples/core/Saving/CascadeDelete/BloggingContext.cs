@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -32,7 +34,7 @@ public sealed class BloggingContext : DbContext
             .ReplaceService<IModelCacheKeyFactory, DeleteBehaviorCacheKeyFactory>()
             .EnableSensitiveDataLogging()
             .UseSqlServer(
-                @"Server=(localdb)\mssqllocaldb;Database=EFSaving.CascadeDelete;Trusted_Connection=True",
+                @"Server=(localdb)\mssqllocaldb;Database=EFSaving.CascadeDelete;Trusted_Connection=True;ConnectRetryCount=0",
                 b => b.MaxBatchSize(1));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -43,11 +45,11 @@ public sealed class BloggingContext : DbContext
             .OnDelete(DeleteBehavior)
             .IsRequired(RequiredRelationship);
 
-    public override int SaveChanges()
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         LogMessages.Clear();
 
-        return base.SaveChanges();
+        return await base.SaveChangesAsync(cancellationToken);
     }
 
     public class DeleteBehaviorCacheKeyFactory : IModelCacheKeyFactory

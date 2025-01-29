@@ -16,10 +16,10 @@ When working against relational databases, EF loads related entities by introduc
 Let's examine the following LINQ query and its translated SQL equivalent:
 
 ```c#
-var blogs = ctx.Blogs
+var blogs = await ctx.Blogs
     .Include(b => b.Posts)
     .Include(b => b.Contributors)
-    .ToList();
+    .ToListAsync();
 ```
 
 ```sql
@@ -35,10 +35,10 @@ In this example, since both `Posts` and `Contributors` are collection navigation
 Note that cartesian explosion does not occur when the two JOINs aren't at the same level:
 
 ```c#
-var blogs = ctx.Blogs
+var blogs = await ctx.Blogs
     .Include(b => b.Posts)
     .ThenInclude(p => p.Comments)
-    .ToList();
+    .ToListAsync();
 ```
 
 ```sql
@@ -56,9 +56,9 @@ In this query, `Comments` is a collection navigation of `Post`, unlike `Contribu
 JOINs can create another type of performance issue. Let's examine the following query, which only loads a single collection navigation:
 
 ```c#
-var blogs = ctx.Blogs
+var blogs = await ctx.Blogs
     .Include(b => b.Posts)
-    .ToList();
+    .ToListAsync();
 ```
 
 ```sql
@@ -73,14 +73,14 @@ Examining at the projected columns, each row returned by this query contains pro
 If you don't actually need the huge column, it's easy to simply not query for it:
 
 ```c#
-var blogs = ctx.Blogs
+var blogs = await ctx.Blogs
     .Select(b => new
     {
         b.Id,
         b.Name,
         b.Posts
     })
-    .ToList();
+    .ToListAsync();
 ```
 
 By using a projection to explicitly choose which columns you want, you can omit big columns and improve performance; note that this is a good idea regardless of data duplication, so consider doing it even when not loading a collection navigation. However, since this projects the blog to an anonymous type, the blog isn't tracked by EF and changes to it can't be saved back as usual.
@@ -107,7 +107,7 @@ ORDER BY [b].[BlogId]
 ```
 
 > [!WARNING]
-> When using split queries with Skip/Take, pay special attention to making your query ordering fully unique; not doing so could cause incorrect data to be returned. For example, if results are ordered only by date, but there can be multiple results with the same date, then each one of the split queries could each get different results from the database. Ordering by both date and ID (or any other unique property or combination of properties) makes the ordering fully unique and avoids this problem. Note that relational databases do not apply any ordering by default, even on the primary key.
+> When using split queries with Skip/Take on EF versions prior to 10, pay special attention to making your query ordering fully unique; not doing so could cause incorrect data to be returned. For example, if results are ordered only by date, but there can be multiple results with the same date, then each one of the split queries could each get different results from the database. Ordering by both date and ID (or any other unique property or combination of properties) makes the ordering fully unique and avoids this problem. Note that relational databases do not apply any ordering by default, even on the primary key.
 
 > [!NOTE]
 > One-to-one related entities are always loaded via JOINs in the same query, as it has no performance impact.
@@ -137,5 +137,6 @@ While split query avoids the performance issues associated with JOINs and cartes
 - While most databases guarantee data consistency for single queries, no such guarantees exist for multiple queries. If the database is updated concurrently when executing your queries, resulting data may not be consistent. You can mitigate it by wrapping the queries in a serializable or snapshot transaction, although doing so may create performance issues of its own. For more information, see your database's documentation.
 - Each query currently implies an additional network roundtrip to your database. Multiple network roundtrips can degrade performance, especially where latency to the database is high (for example, cloud services).
 - While some databases allow consuming the results of multiple queries at the same time (SQL Server with MARS, Sqlite), most allow only a single query to be active at any given point. So all results from earlier queries must be buffered in your application's memory before executing later queries, which leads to increased memory requirements.
+- When including reference navigations as well as collection navigations, each one of the split queries will include joins to the reference navigations. This can degrade performance, particularly if there are many reference navigations. Please upvote [#29182](https://github.com/dotnet/efcore/issues/29182) if this is something you'd like to see fixed.
 
 Unfortunately, there isn't one strategy for loading related entities that fits all scenarios. Carefully consider the advantages and disadvantages of single and split queries to select the one that fits your needs.

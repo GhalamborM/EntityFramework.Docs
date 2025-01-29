@@ -1,8 +1,8 @@
 ---
 title: Applying Migrations - EF Core
 description: Strategies for applying schema migrations to production and development databases using Entity Framework Core
-author: bricelam
-ms.date: 11/02/2021
+author: SamMonoRT
+ms.date: 10/29/2024
 uid: core/managing-schemas/migrations/applying
 ---
 # Applying Migrations
@@ -117,9 +117,6 @@ The EF command-line tools can be used to apply migrations to a database. While p
 * The SQL commands are applied directly by the tool, without giving the developer a chance to inspect or modify them. This can be dangerous in a production environment.
 * The .NET SDK and the EF tool must be installed on production servers and requires the project's source code.
 
-> [!NOTE]
-> Each migration is applied in its own transaction. See [GitHub issue #22616](https://github.com/dotnet/efcore/issues/22616) for a discussion of possible future enhancements in this area.
-
 ### [.NET Core CLI](#tab/dotnet-core-cli)
 
 The following updates your database to the latest migration:
@@ -222,11 +219,14 @@ Options:
 | `--no-color`                             |                   | Don't colorize output.                                                                                 |
 | `--prefix-output`                        |                   | Prefix output with level.                                                                              |
 
-The following example applies migrations to a local SQL Server instance using the specified username and password.
+The following example applies migrations to a local SQL Server instance using the specified username and credentials:
 
 ```powershell
-.\efbundle.exe --connection 'Data Source=(local)\MSSQLSERVER;Initial Catalog=Blogging;User ID=myUsername;Password=myPassword'
+.\efbundle.exe --connection 'Data Source=(local)\MSSQLSERVER;Initial Catalog=Blogging;User ID=myUsername;Password={;'$Credential;'here'}'
 ```
+
+> [!WARNING]
+> Don't forget to copy appsettings.json alongside your bundle. The bundle relies on the presence of appsettings.json in the execution directory.
 
 ### Migration bundle example
 
@@ -311,32 +311,32 @@ PS C:\local\AllTogetherNow\SixOh>
 
 It's possible for the application itself to apply migrations programmatically, typically during startup. While productive for local development and testing of migrations, this approach is inappropriate for managing production databases, for the following reasons:
 
-* If multiple instances of your application are running, both applications could attempt to apply the migration concurrently and fail (or worse, cause data corruption).
+* For versions of EF prior to 9, if multiple instances of your application are running, both applications could attempt to apply the migration concurrently and fail (or worse, cause data corruption).
 * Similarly, if an application is accessing the database while another application migrates it, this can cause severe issues.
 * The application must have elevated access to modify the database schema. It's generally good practice to limit the application's database permissions in production.
 * It's important to be able to roll back an applied migration in case of an issue. The other strategies provide this easily and out of the box.
 * The SQL commands are applied directly by the program, without giving the developer a chance to inspect or modify them. This can be dangerous in a production environment.
 
-To apply migrations programmatically, call `context.Database.Migrate()`. For example, a typical ASP.NET application can do the following:
+To apply migrations programmatically, call `context.Database.MigrateAsync()`. For example, a typical ASP.NET application can do the following:
 
 ```csharp
-public static void Main(string[] args)
+public static async Task Main(string[] args)
 {
     var host = CreateHostBuilder(args).Build();
 
     using (var scope = host.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        db.Database.Migrate();
+        await db.Database.MigrateAsync();
     }
 
     host.Run();
 }
 ```
 
-Note that `Migrate()` builds on top of the `IMigrator` service, which can be used for more advanced scenarios. Use `myDbContext.GetInfrastructure().GetService<IMigrator>()` to access it.
+Note that `MigrateAsync()` builds on top of the `IMigrator` service, which can be used for more advanced scenarios. Use `myDbContext.GetInfrastructure().GetService<IMigrator>()` to access it.
 
 > [!WARNING]
 >
 > * Carefully consider before using this approach in production. Experience has shown that the simplicity of this deployment strategy is outweighed by the issues it creates. Consider generating SQL scripts from migrations instead.
-> * Don't call `EnsureCreated()` before `Migrate()`. `EnsureCreated()` bypasses Migrations to create the schema, which causes `Migrate()` to fail.
+> * Don't call `EnsureCreatedAsync()` before `MigrateAsync()`. `EnsureCreatedAsync()` bypasses Migrations to create the schema, which causes `MigrateAsync()` to fail.

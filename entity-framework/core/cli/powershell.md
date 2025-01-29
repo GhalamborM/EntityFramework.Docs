@@ -1,8 +1,8 @@
 ---
 title: EF Core tools reference (Package Manager Console) - EF Core
 description: Reference guide for the Entity Framework Core Visual Studio Package Manager Console
-author: bricelam
-ms.date: 11/15/2021
+author: SamMonoRT
+ms.date: 11/08/2024
 uid: core/cli/powershell
 ---
 # Entity Framework Core tools reference - Package Manager Console in Visual Studio
@@ -11,7 +11,9 @@ The Package Manager Console (PMC) tools for Entity Framework Core perform design
 
 If you aren't using Visual Studio, we recommend the [EF Core Command-line Tools](xref:core/cli/dotnet) instead. The .NET Core CLI tools are cross-platform and run inside a command prompt.
 
-## Installing the tools
+[!INCLUDE [managed-identities-test-non-production](~/core/includes/managed-identities-test-non-production.md)]
+
+## Install the tools
 
 Install the Package Manager Console tools by running the following command in **Package Manager Console**:
 
@@ -53,7 +55,7 @@ SHORT DESCRIPTION
 <A list of available commands follows, omitted here.>
 ```
 
-## Using the tools
+## Use the tools
 
 Before using the tools:
 
@@ -79,6 +81,9 @@ It's also possible to [put migrations code in a class library separate from the 
 ### Other target frameworks
 
 The Package Manager Console tools work with .NET Core or .NET Framework projects. Apps that have the EF Core model in a .NET Standard class library might not have a .NET Core or .NET Framework project. For example, this is true of Xamarin and Universal Windows Platform apps. In such cases, you can create a .NET Core or .NET Framework console app project whose only purpose is to act as startup project for the tools. The project can be a dummy project with no real code &mdash; it is only needed to provide a target for the tooling.
+
+> [!IMPORTANT]
+> Xamarin.Android, Xamarin.iOS, Xamarin.Mac are now integrated directly into .NET (starting with .NET 6) as .NET for Android, .NET for iOS, and .NET for macOS. If you're building with these project types today, they should be upgraded to .NET SDK-style projects for continued support. For more information about upgrading Xamarin projects to .NET, see the [Upgrade from Xamarin to .NET & .NET MAUI](/dotnet/maui/migration) documentation.
 
 Why is a dummy project required? As mentioned earlier, the tools have to execute application code at design time. To do that, they need to use the .NET Core or .NET Framework runtime. When the EF Core model is in a project that targets .NET Core or .NET Framework, the EF Core tools borrow the runtime from the project. They can't do that if the EF Core model is in a .NET Standard class library. The .NET Standard is not an actual .NET implementation; it's a specification of a set of APIs that .NET implementations must support. Therefore .NET Standard is not sufficient for the EF Core tools to execute application code. The dummy project you create to use as startup project provides a concrete target platform into which the tools can load the .NET Standard class library.
 
@@ -183,6 +188,9 @@ Parameters:
 
 The [common parameters](#common-parameters) are listed above.
 
+> [!NOTE]
+> The PMC tools currently don't support generating code required for NativeAOT compilation and precompiled queries.
+
 The following example uses the defaults and works if there is only one `DbContext` in the project:
 
 ```powershell
@@ -215,7 +223,7 @@ Parameters:
 
 | Parameter                                 | Description                                                                                                                                                                                                                                                                  |
 |:------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| <nobr>`-Connection <String>`</nobr>       | The connection string to the database. For ASP.NET Core 2.x projects, the value can be *name=\<name of connection string>*. In that case the name comes from the configuration sources that are set up for the project. This is a positional parameter and is required.      |
+| <nobr>`-Connection <String>`</nobr>       | The connection string to the database. The value can be *name=\<name of connection string>*. In that case the name comes from the [configuration sources](xref:core/miscellaneous/connection-strings#aspnet-core) that are set up for the project. This is a positional parameter and is required.      |
 | <nobr>`-Provider <String>`</nobr>         | The provider to use. Typically this is the name of the NuGet package, for example: `Microsoft.EntityFrameworkCore.SqlServer`. This is a positional parameter and is required.                                                                                                |
 | <nobr>`-OutputDir <String>`</nobr>        | The directory to put entity class files in. Paths are relative to the project directory.                                                                                                                                                                                     |
 | <nobr>`-ContextDir <String>`</nobr>       | The directory to put the `DbContext` file in. Paths are relative to the project directory.                                                                                                                                                                                   |
@@ -244,7 +252,7 @@ Example that scaffolds only selected tables and creates the context in a separat
 Scaffold-DbContext "Server=(localdb)\mssqllocaldb;Database=Blogging;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Tables "Blog","Post" -ContextDir Context -Context BlogContext -ContextNamespace New.Namespace
 ```
 
-The following example reads the connection string from the project's configuration possibly set using the [Secret Manager tool](/aspnet/core/security/app-secrets#secret-manager).
+The following example [reads the connection string using Configuration](xref:core/miscellaneous/connection-strings#aspnet-core).
 
 ```powershell
 Scaffold-DbContext "Name=ConnectionStrings:Blogging" Microsoft.EntityFrameworkCore.SqlServer

@@ -1,7 +1,7 @@
 ---
 title: Introduction to relationships - EF Core
 description: How to configure relationships between entity types when using Entity Framework Core
-author: ajcvickers
+author: SamMonoRT
 ms.date: 03/30/2023
 uid: core/modeling/relationships
 ---
@@ -62,7 +62,7 @@ public class Blog
 This connection from `Blog` to `Post` and, inversely, from `Post` back to `Blog` is known as a "relationship" in EF Core.
 
 > [!IMPORTANT]
-> A **single** relationship can typically traversed in either direction. In this example, that is from `Blog` to `Post` via the `Blog.Posts` property, and from `Post` back to `Blog` via the `Post.Blog` property. This is **one** relationship, not two.
+> A **single** relationship can typically be traversed in either direction. In this example, that is from `Blog` to `Post` via the `Blog.Posts` property, and from `Post` back to `Blog` via the `Post.Blog` property. This is **one** relationship, not two.
 
 > [!TIP]
 > In EF Core, the `Blog.Posts` and `Post.Blog` properties are called "navigations".
@@ -89,7 +89,7 @@ CREATE TABLE [Blogs] (
     CONSTRAINT [PK_Blogs] PRIMARY KEY ([Id]));
 ```
 
-In this relational model, the `Posts` and `Blogs` tables are each given a "primary key" column. The value of the primary key uniquely identifies each post or blog. In addition, the `Blogs` table is given a "foreign key" column. The `Blogs` primary key column `Id` is referenced by the `BlogId` foreign key column of the `Posts` table. This column is "constrained" such that any value in the `BlogId` column of `Posts` **must** match a value in the `Id` column of `Blogs`. This match determines which blog every post is related to. For example, if the `BlogId` value in one row of the `Posts` table is 7, then the post represented by that row is published in the blog with the primary key 7.
+In this relational model, the `Posts` and `Blogs` tables are each given a "primary key" column. The value of the primary key uniquely identifies each post or blog. In addition, the `Posts` table is given a "foreign key" column. The `Blogs` primary key column `Id` is referenced by the `BlogId` foreign key column of the `Posts` table. This column is "constrained" such that any value in the `BlogId` column of `Posts` **must** match a value in the `Id` column of `Blogs`. This match determines which blog every post is related to. For example, if the `BlogId` value in one row of the `Posts` table is 7, then the post represented by that row is published in the blog with the primary key 7.
 
 ## Mapping relationships in EF Core
 
@@ -106,7 +106,7 @@ Once this mapping is made, EF changes the foreign key values as needed when the 
 > [!NOTE]
 > Primary keys are used for more than mapping relationships. See [_Keys_](xref:core/modeling/keys) for more information.
 
-For example, the entity types shown above can updated with primary and foreign key properties:
+For example, the entity types shown above can be updated with primary and foreign key properties:
 
 ```csharp
 public class Blog

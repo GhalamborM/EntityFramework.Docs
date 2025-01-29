@@ -1,7 +1,7 @@
 ﻿---
 title: Foreign and principal keys in relationships - EF Core
 description: The use and configuration of foreign keys, alternate keys, and primary keys in relationships
-author: ajcvickers
+author: SamMonoRT
 ms.date: 03/30/2023
 uid: core/modeling/relationships/foreign-and-principal-keys
 ---
@@ -77,7 +77,7 @@ Using a string is useful when:
 
 ### Non-nullable foreign key columns
 
-As described in [_Optional and required relationships_](xref:core/modeling/relationships#optional-and-required-relationships), the nullability of the foreign key property determines whether a relationship is optional or required. However, a nullable foreign key property can used for a required relationship using the [`[Required]` attribute](xref:core/modeling/relationships/mapping-attributes), or by calling `IsRequired` in the model building API. For example:
+As described in [_Optional and required relationships_](xref:core/modeling/relationships#optional-and-required-relationships), the nullability of the foreign key property determines whether a relationship is optional or required. However, a nullable foreign key property can be used for a required relationship using the [`[Required]` attribute](xref:core/modeling/relationships/mapping-attributes), or by calling `IsRequired` in the model building API. For example:
 
 <!--
             protected override void OnModelCreating(ModelBuilder modelBuilder)

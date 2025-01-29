@@ -1,8 +1,8 @@
 ---
-title: Advanced Performance Topics
+title: Advanced Performance Topics - EF Core
 description: Advanced performance topics for Entity Framework Core
 author: roji
-ms.date: 1/31/2022
+ms.date: 9/26/2023
 uid: core/performance/advanced-performance-topics
 ---
 # Advanced Performance Topics
@@ -15,13 +15,13 @@ Note that context pooling is orthogonal to database connection pooling, which is
 
 ### [With dependency injection](#tab/with-di)
 
-The typical pattern in an ASP.NET Core app using EF Core involves registering a custom <xref:Microsoft.EntityFrameworkCore.DbContext> type into the [dependency injection](/aspnet/core/fundamentals/dependency-injection) container via <xref:Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.AddDbContext%2A>. Then, instances of that type are obtained through constructor parameters in controllers or Razor Pages.
+The typical pattern in an ASP.NET Core app using EF Core involves registering a custom <xref:Microsoft.EntityFrameworkCore.DbContext> type into the [dependency injection](/aspnet/core/fundamentals/dependency-injection) container via <xref:Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.AddDbContext*>. Then, instances of that type are obtained through constructor parameters in controllers or Razor Pages.
 
-To enable context pooling, simply replace `AddDbContext` with <xref:Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.AddDbContextPool%2A>:
+To enable context pooling, simply replace `AddDbContext` with <xref:Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.AddDbContextPool*>:
 
 [!code-csharp[Main](../../../samples/core/Performance/AspNetContextPooling/Program.cs#AddDbContextPool)]
 
-The `poolSize` parameter of <xref:Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.AddDbContextPool%2A> sets the maximum number of instances retained by the pool (defaults to 1024). Once `poolSize` is exceeded, new context instances are not cached and EF falls back to the non-pooling behavior of creating instances on demand.
+The `poolSize` parameter of <xref:Microsoft.Extensions.DependencyInjection.EntityFrameworkServiceCollectionExtensions.AddDbContextPool*> sets the maximum number of instances retained by the pool (defaults to 1024). Once `poolSize` is exceeded, new context instances are not cached and EF falls back to the non-pooling behavior of creating instances on demand.
 
 ### [Without dependency injection](#tab/without-di)
 
@@ -77,13 +77,19 @@ The full source code for this sample is available [here](https://github.com/dotn
 > [!NOTE]
 > Although EF Core takes care of resetting internal state for `DbContext` and its related services, it generally does not reset state in the underlying database driver, which is outside of EF. For example, if you manually open and use a `DbConnection` or otherwise manipulate ADO.NET state, it's up to you to restore that state before returning the context instance to the pool, e.g. by closing the connection. Failure to do so may cause state to get leaked across unrelated requests.
 
+### Connection Pooling Considerations
+
+With most databases, a long-lived connection is required for performing database operations, and such connections can be expensive to open and close. EF does not implement connection pooling itself, but relies on the underlying database driver (e.g. ADO.NET driver) for managing database connections. Connection pooling is a client-side mechanism that reuses existing database connections to reduce the overhead of opening and closing connections repeatedly. This mechanism is generally consistent across databases supported by EF, such as Azure SQL Database, PostgreSQL, and others., although factors specific to the database or environment, such as resource limits or service configurations, may affect pooling efficiency. Connection pooling is usually enabled by default, and any pooling configuration must be performed at the low-level driver level as documented by that driver; for example, when using ADO.NET, parameters such as minimum or maximum pool sizes are usually configured via the connection string.
+
+Connection pooling is completely orthogonal to EF's `DbContext` pooling, which is described above: while the low-level database driver pools database connections (to avoid the overhead of opening/closing connections), EF can pool context instances (to avoid context memory allocation and initialization overheads). Regardless of whether a context instance is pooled or not, EF generally opens connections just before each operation (e.g. query), and closes it right afterwards, causing it to be returned to the pool; this is done to avoid keeping connections out of the pool any longer than is necessary.
+
 ## Compiled queries
 
 When EF receives a LINQ query tree for execution, it must first "compile" that tree, e.g. produce SQL from it. Because this task is a heavy process, EF caches queries by the query tree shape, so that queries with the same structure reuse internally-cached compilation outputs. This caching ensures that executing the same LINQ query multiple times is very fast, even if parameter values differ.
 
 However, EF must still perform certain tasks before it can make use of the internal query cache. For example, your query's expression tree must be recursively compared with the expression trees of cached queries, to find the correct cached query. The overhead for this initial processing is negligible in the majority of EF applications, especially when compared to other costs associated with query execution (network I/O, actual query processing and disk I/O at the database...). However, in certain high-performance scenarios it may be desirable to eliminate it.
 
-EF supports *compiled queries*, which allow the explicit compilation of a LINQ query into a .NET delegate. Once this delegate is acquired, it can be invoked directly to execute the query, without providing the LINQ expression tree. This technique bypasses the cache lookup, and provides the most optimized way to execute a query in EF Core. Following are some benchmark results comparing compiled and non-compiled query performance; benchmark on your platform before making any decisions. [The source code is available here](https://github.com/dotnet/EntityFramework.Docs/tree/main/samples/core/Benchmarks/ContextPooling.cs), feel free to use it as a basis for your own measurements.
+EF supports *compiled queries*, which allow the explicit compilation of a LINQ query into a .NET delegate. Once this delegate is acquired, it can be invoked directly to execute the query, without providing the LINQ expression tree. This technique bypasses the cache lookup, and provides the most optimized way to execute a query in EF Core. Following are some benchmark results comparing compiled and non-compiled query performance; benchmark on your platform before making any decisions. [The source code is available here](https://github.com/dotnet/EntityFramework.Docs/blob/main/samples/core/Benchmarks/CompiledQueries.cs), feel free to use it as a basis for your own measurements.
 
 |               Method | NumBlogs |     Mean |    Error |   StdDev |  Gen 0 | Allocated |
 |--------------------- |--------- |---------:|---------:|---------:|-------:|----------:|
@@ -92,7 +98,7 @@ EF supports *compiled queries*, which allow the explicit compilation of a LINQ q
 |    WithCompiledQuery |       10 | 645.3 us | 10.00 us |  9.35 us | 2.9297 |     13 KB |
 | WithoutCompiledQuery |       10 | 709.8 us | 25.20 us | 73.10 us | 3.9063 |     18 KB |
 
-To use compiled queries, first compile a query with <xref:Microsoft.EntityFrameworkCore.EF.CompileAsyncQuery%2A?displayProperty=nameWithType> as follows (use <xref:Microsoft.EntityFrameworkCore.EF.CompileQuery%2A?displayProperty=nameWithType> for synchronous queries):
+To use compiled queries, first compile a query with <xref:Microsoft.EntityFrameworkCore.EF.CompileAsyncQuery*?displayProperty=nameWithType> as follows (use <xref:Microsoft.EntityFrameworkCore.EF.CompileQuery*?displayProperty=nameWithType> for synchronous queries):
 
 [!code-csharp[Main](../../../samples/core/Performance/Other/Program.cs#CompiledQueryCompile)]
 
@@ -119,12 +125,12 @@ Since the expression trees contains different constants, the expression tree dif
 
 ```sql
 SELECT TOP(1) [b].[Id], [b].[Name]
-FROM [Blogs] AS [b]
-WHERE [b].[Name] = N'blog1'
+FROM [Posts] AS [b]
+WHERE [b].[Name] = N'post1'
 
 SELECT TOP(1) [b].[Id], [b].[Name]
-FROM [Blogs] AS [b]
-WHERE [b].[Name] = N'blog2'
+FROM [Posts] AS [b]
+WHERE [b].[Name] = N'post2'
 ```
 
 Because the SQL differs, your database server will likely also need to produce a query plan for both queries, rather than reusing the same plan.
@@ -137,14 +143,14 @@ Since the blog name is now *parameterized*, both queries have the same tree shap
 
 ```sql
 SELECT TOP(1) [b].[Id], [b].[Name]
-FROM [Blogs] AS [b]
-WHERE [b].[Name] = @__blogName_0
+FROM [Posts] AS [b]
+WHERE [b].[Name] = @__postTitle_0
 ```
 
 Note that there is no need to parameterize each and every query: it's perfectly fine to have some queries with constants, and indeed, databases (and EF) can sometimes perform certain optimization around constants which aren't possible when the query is parameterized. See the section on [dynamically-constructed queries](#dynamically-constructed-queries) for an example where proper parameterization is crucial.
 
 > [!NOTE]
-> EF Core's [event counters](xref:core/logging-events-diagnostics/event-counters) report the Query Cache Hit Rate. In a normal application, this counter reaches 100% soon after program startup, once most queries have executed at least once. If this counter remains stable below 100%, that is an indication that your application may be doing something which defeats the query cache - it's a good idea to investigate that.
+> EF Core's [metrics](xref:core/logging-events-diagnostics/metrics) report the Query Cache Hit Rate. In a normal application, this metric reaches 100% soon after program startup, once most queries have executed at least once. If this metric remains stable below 100%, that is an indication that your application may be doing something which defeats the query cache - it's a good idea to investigate that.
 
 > [!NOTE]
 > How the database manages caches query plans is database-dependent. For example, SQL Server implicitly maintains an LRU query plan cache, whereas PostgreSQL does not (but prepared statements can produce a very similar end effect). Consult your database documentation for more details.
@@ -159,7 +165,7 @@ The following example uses three techniques to construct a query's `Where` lambd
 2. **Expression API with parameter**: A better version, which substitutes the constant with a parameter. This ensures that the query is only compiled once regardless of the value provided, and the same (parameterized) SQL is generated.
 3. **Simple with parameter**: A version which doesn't use the Expression API, for comparison, which creates the same tree as the method above but is much simpler. In many cases, it's possible to dynamically build your expression tree without resorting to the Expression API, which is easy to get wrong.
 
-; we add a `Where` operator to the query only if the given parameter is not null. Note that this isn't a good use case for dynamically constructing a query - but we're using it for simplicity:
+We add a `Where` operator to the query only if the given parameter is not null. Note that this isn't a good use case for dynamically constructing a query - but we're using it for simplicity:
 
 ### [Expression API with constant](#tab/expression-api-with-constant)
 

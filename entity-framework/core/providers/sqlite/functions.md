@@ -1,7 +1,7 @@
 ---
 title: Function Mappings - SQLite Database Provider - EF Core
 description: Function Mappings of the SQLite EF Core database provider
-author: bricelam
+author: SamMonoRT
 ms.date: 7/26/2023
 uid: core/providers/sqlite/functions
 ---
@@ -14,11 +14,13 @@ This page shows which .NET members are translated into which SQL functions when 
 .NET                                                  | SQL                                | Added in
 ----------------------------------------------------- | ---------------------------------- | --------
 group.Average(x => x.Property)                        | AVG(Property)
+group.Average(x => x.DecimalProperty)                 | ef_avg(DecimalProperty)            | EF Core 9.0
 group.Count()                                         | COUNT(*)
 group.LongCount()                                     | COUNT(*)
 group.Max(x => x.Property)                            | MAX(Property)
 group.Min(x => x.Property)                            | MIN(Property)
 group.Sum(x => x.Property)                            | SUM(Property)
+group.Sum(x => x.DecimalProperty)                     | ef_sum(DecimalProperty)            | EF Core 9.0
 string.Concat(group.Select(x => x.Property))          | group_concat(Property, '')         | EF Core 7.0
 string.Join(separator, group.Select(x => x.Property)) | group_concat(Property, @separator) | EF Core 7.0
 
@@ -147,11 +149,11 @@ Math.Truncate(d)                 | trunc(@d)                             | EF Co
 
 > [!TIP]
 > In addition to the methods listed here, corresponding [generic math](/dotnet/standard/generics/math) implementations
-> and [MathF](/dotnet/api/system.mathf) methods are also translated. For example, `Math.Sin`, `MathF.Sin`, `double.Sin`,
+> and <xref:System.MathF> methods are also translated. For example, `Math.Sin`, `MathF.Sin`, `double.Sin`,
 > and `float.Sin` all map to the `sin` function in SQL.
 
 > [!TIP]
-> SQL functions prefixed with *ef* are created by EF Core.
+> SQL functions prefixed with `ef_` are created by EF Core.
 
 ## String functions
 

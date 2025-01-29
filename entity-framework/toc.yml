@@ -21,6 +21,8 @@
         href: efcore-and-ef6/porting/port-database.md
       - name: Porting to a hybrid model
         href: efcore-and-ef6/porting/port-hybrid.md
+      - name: Behavior Changes between EF6 and EF Core
+        href: efcore-and-ef6/porting/port-behavior.md
       - name: Detailed cases to consider when Porting
         href: efcore-and-ef6/porting/port-detailed-cases.md
     - name: Use EF6 and EF Core in the same application
@@ -30,14 +32,10 @@
     items:
     - name: Welcome!
       href: core/index.md
-    - name: "What's new in EF Core 7.0 (EF7)"
-      href: /ef/core/what-is-new/ef-core-7.0/whatsnew
-    - name: "Breaking changes in EF Core 7.0 (EF7)"
-      href: /ef/core/what-is-new/ef-core-7.0/breaking-changes
-    - name: "The plan for EF Core 8 (EF8)"
-      href: /ef/core/what-is-new/ef-core-8.0/plan
-    - name: "Latest news and progress on EF Core 8 (EF8)"
-      href: https://aka.ms/efnews
+    - name: "What's new in EF Core 9.0"
+      href: core/what-is-new/ef-core-9.0/whatsnew.md
+    - name: "Breaking changes in EF Core 9.0"
+      href: core/what-is-new/ef-core-9.0/breaking-changes.md
     - name: Getting started
       items:
       - name: EF Core Overview
@@ -57,16 +55,19 @@
         href: core/get-started/wpf.md
       - name: Windows Forms tutorial
         href: core/get-started/winforms.md
-      - name: Xamarin tutorial
-        href: core/get-started/xamarin.md
-
     - name: "Releases and planning (roadmap)"
       items:
       - name: Current and planned releases
         href: core/what-is-new/index.md
       - name: Release planning process
         href: core/what-is-new/release-planning.md
-      - name: EF Core 8 (EF8)
+      - name: EF Core 9.0
+        items:
+          - name: "What's new?"
+            href: core/what-is-new/ef-core-9.0/whatsnew.md
+          - name: Breaking changes
+            href: core/what-is-new/ef-core-9.0/breaking-changes.md
+      - name: EF Core 8.0
         items:
           - name: High-level plan
             href: core/what-is-new/ef-core-8.0/plan.md
@@ -74,7 +75,7 @@
             href: core/what-is-new/ef-core-8.0/whatsnew.md
           - name: Breaking changes
             href: core/what-is-new/ef-core-8.0/breaking-changes.md
-      - name: EF Core 7.0 (EF7)
+      - name: EF Core 7.0
         items:
           - name: High-level plan
             href: core/what-is-new/ef-core-7.0/plan.md
@@ -320,8 +321,8 @@
       - name: Diagnostic listeners
         href: core/logging-events-diagnostics/diagnostic-listeners.md
       #- name: Debug views
-      - name: Event counters
-        href: core/logging-events-diagnostics/event-counters.md
+      - name: Metrics
+        href: core/logging-events-diagnostics/metrics.md
 
     - name: Testing
       items:
@@ -346,6 +347,8 @@
         href: core/performance/efficient-updating.md
       - name: Modeling for performance
         href: core/performance/modeling-for-performance.md
+      - name: NativeAOT and precompiled queries
+        href: core/performance/nativeaot-and-precompiled-queries.md
       - name: Advanced performance topics
         href: core/performance/advanced-performance-topics.md
 
@@ -357,7 +360,6 @@
         href: core/miscellaneous/async.md
       - name: Nullable reference types
         href: core/miscellaneous/nullable-reference-types.md
-      #- name: Using dependency injection
       - name: Collations and case sensitivity
         href: core/miscellaneous/collations-and-case-sensitivity.md
       - name: Connection resiliency
@@ -370,6 +372,13 @@
         href: core/miscellaneous/multitenancy.md
       - name: Plug-in APIs
         href: core/miscellaneous/plugins.md
+      - name: EF Core Architecture
+        displayName: Internals
+        items:
+        - name: Overview
+          href: core/miscellaneous/internals/index.md
+        - name: Design-time tools
+          href: core/miscellaneous/internals/tools.md
 
     - name: Database providers
       items:
@@ -417,12 +426,16 @@
         items:
         - name: Overview
           href: core/providers/cosmos/index.md
+        - name: Modeling
+          href: core/providers/cosmos/modeling.md
+        - name: Querying
+          href: core/providers/cosmos/querying.md
         - name: Work with unstructured data
           href: core/providers/cosmos/unstructured-data.md
+        - name: Vector search
+          href: core/providers/cosmos/vector-search.md
         - name: Azure Cosmos DB limitations
           href: core/providers/cosmos/limitations.md
-        - name: Function mappings
-          href: core/providers/cosmos/functions.md
         - name: End-to-end sample
           href: core/providers/cosmos/planetary-docs-sample.md
       - name: In-memory (not recommended)
@@ -435,7 +448,7 @@
     - name: Tools & extensions
       href: core/extensions/index.md
 
-    - name: Command-line reference
+    - name: Design-time tools reference
       items:
       - name: Overview
         href: core/cli/index.md
@@ -443,13 +456,19 @@
         href: core/cli/powershell.md
       - name: .NET Core CLI
         href: core/cli/dotnet.md
+      - name: MSBuild Tasks
+        href: core/cli/msbuild.md
       - name: Design-time DbContext creation
         href: core/cli/dbcontext-creation.md
       - name: Design-time services
         href: core/cli/services.md
 
-    - name: EF Core API reference >>
-      href: /dotnet/api/?view=efcore-7.0&preserve-view=true
+    - name: Learn more
+      items:
+        - name: EF Core API reference >>
+          href: /dotnet/api/?view=efcore-9.0&preserve-view=true
+        - name: .NET Data Community Standups
+          href: core/learn-more/community-standups.md
 
   - name: Entity Framework 6
     items:
@@ -465,6 +484,8 @@
         href: ef6/what-is-new/upgrading-to-ef6.md
       - name: Visual Studio Releases
         href: ef6/what-is-new/visual-studio.md
+      - name: Microsoft.Data.SqlClient support
+        href: ef6/what-is-new/microsoft-ef6-sqlserver.md
     - name: Get started
       href: ef6/get-started.md
     - name: Fundamentals

@@ -7,7 +7,7 @@ uid: core/miscellaneous/nullable-reference-types
 ---
 # Working with Nullable Reference Types
 
-C# 8 introduced a new feature called [nullable reference types (NRT)](/dotnet/csharp/tutorials/nullable-reference-types), allowing reference types to be annotated, indicating whether it is valid for them to contain `null` or not. If you are new to this feature, it is recommended that make yourself familiar with it by reading the C# docs. Nullable reference types are enabled by default in new project templates, but remain disabled in existing projects unless explicitly opted into.
+C# 8 introduced a new feature called [nullable reference types (NRT)](/dotnet/csharp/tutorials/nullable-reference-types), allowing reference types to be annotated, indicating whether it is valid for them to contain `null` or not. If you are new to this feature, it is recommended that you make yourself familiar with it by reading the C# docs. Nullable reference types are enabled by default in new project templates, but remain disabled in existing projects unless explicitly opted into.
 
 This page introduces EF Core's support for nullable reference types, and describes best practices for working with them.
 
@@ -95,9 +95,9 @@ Another strategy is to use non-nullable auto-properties, but to initialize them 
 When dealing with optional relationships, it's possible to encounter compiler warnings where an actual `null` reference exception would be impossible. When translating and executing your LINQ queries, EF Core guarantees that if an optional related entity does not exist, any navigation to it will simply be ignored, rather than throwing. However, the compiler is unaware of this EF Core guarantee, and produces warnings as if the LINQ query were executed in memory, with LINQ to Objects. As a result, it is necessary to use the null-forgiving operator (!) to inform the compiler that an actual `null` value isn't possible:
 
 ```csharp
-var order = context.Orders
+var order = await context.Orders
     .Where(o => o.OptionalInfo!.SomeProperty == "foo")
-    .ToList();
+    .ToListAsync();
 ```
 
 A similar issue occurs when including multiple levels of relationships across optional navigations:

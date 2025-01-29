@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.ObjectModel;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace NewInEfCore8;
@@ -109,7 +110,7 @@ public static class PrimitiveCollectionsSample
         Console.WriteLine();
     }
 
-    public class MyCollection : ICollection<int>
+    public class MyCollection : IList<int>
     {
         private readonly List<int> _list = new();
         public IEnumerator<int> GetEnumerator() => _list.GetEnumerator();
@@ -121,6 +122,14 @@ public static class PrimitiveCollectionsSample
         public bool Remove(int item) => _list.Remove(item);
         public int Count => _list.Count;
         public bool IsReadOnly => ((ICollection<int>)_list).IsReadOnly;
+        public int IndexOf(int item) => _list.IndexOf(item);
+        public void Insert(int index, int item) => _list.Insert(index, item);
+        public void RemoveAt(int index) => _list.RemoveAt(index);
+        public int this[int index]
+        {
+            get => _list[index];
+            set => _list[index] = value;
+        }
     }
 
     public class PrimitiveCollections
@@ -128,18 +137,19 @@ public static class PrimitiveCollectionsSample
         public int Id { get; set; }
         public IEnumerable<int> Ints { get; set; } = null!;
         public ICollection<string> Strings { get; set; } = null!;
-        public ISet<DateTime> DateTimes { get; set; } = null!;
+        public Collection<DateTime> DateTimes { get; set; } = null!;
         public IList<DateOnly> Dates { get; set; } = null!;
 
         [MaxLength(2500)]
         [Unicode(false)]
         public uint[] UnsignedInts { get; set; } = null!;
 
-        public HashSet<Guid> Guids { get; set; } = null!;
+        public ObservableCollection<Guid> Guids { get; set; } = null!;
         public List<bool> Booleans { get; set; } = null!;
         public List<Uri> Urls { get; set; } = null!;
 
-        public MyCollection SomeInts { get; set; } = null!;
+        // https://github.com/dotnet/efcore/issues/32055
+        // public MyCollection SomeInts { get; set; } = null!;
 
         public List<int> GetOnlyInts { get; } = new();
 
@@ -238,7 +248,7 @@ public static class PrimitiveCollectionsSample
             => (UseSqlite
                     ? optionsBuilder.UseSqlite(@$"DataSource={GetType().Name}.db")
                     : optionsBuilder.UseSqlServer(
-                        @$"Server=(localdb)\mssqllocaldb;Database={GetType().Name}"))
+                        @$"Server=(localdb)\mssqllocaldb;Database={GetType().Name};ConnectRetryCount=0"))
                         //sqlServerOptionsBuilder => sqlServerOptionsBuilder.UseCompatibilityLevel(120)))
                 .EnableSensitiveDataLogging()
                 .LogTo(
@@ -301,13 +311,13 @@ public static class PrimitiveCollectionsSample
                 {
                     Ints = new[] { 1, 2, 3 },
                     Strings = new List<string> { "One", "Two", "Three" },
-                    DateTimes = new HashSet<DateTime> { new(2023, 1, 1, 1, 1, 1), new(2023, 2, 2, 2, 2, 2), new(2023, 3, 3, 3, 3, 3) },
+                    DateTimes = new Collection<DateTime> { new(2023, 1, 1, 1, 1, 1), new(2023, 2, 2, 2, 2, 2), new(2023, 3, 3, 3, 3, 3) },
                     Dates = new List<DateOnly> { new(2023, 1, 1), new(2023, 2, 2), new(2023, 3, 3) },
                     UnsignedInts = new uint[] { 1, 2, 3 },
                     Guids = new() { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() },
                     Booleans = new() { true, false, true },
                     Urls = new() { new("https://127.0.0.1/"), new("http://192.168.0.1/"), new("https://devblogs.microsoft.com/dotnet/") },
-                    SomeInts = new() { 1, 2, 3 },
+                    //SomeInts = new() { 1, 2, 3 },
                     // DddIds = new() { new(1), new(2), new(3) }
                 });
 

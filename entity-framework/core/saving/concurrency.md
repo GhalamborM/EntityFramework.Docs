@@ -1,7 +1,7 @@
 ---
 title: Handling Concurrency Conflicts - EF Core
 description: Managing conflicts when the same data is updated concurrently with Entity Framework Core
-author: ajcvickers
+author: SamMonoRT
 ms.date: 10/19/2022
 uid: core/saving/concurrency
 ---
@@ -35,9 +35,9 @@ public class Person
 In SQL Server, this configures a concurrency token that automatically changes in the database every time the row is changed (more details are available below). With this configuration in place, let's examine what happens with a simple update operation:
 
 ```csharp
-var person = context.People.Single(b => b.FirstName == "John");
+var person = await context.People.SingleAsync(b => b.FirstName == "John");
 person.FirstName = "Paul";
-context.SaveChanges();
+await context.SaveChangesAsync();
 ```
 
 1. In the first step, a Person is loaded from the database; this includes the concurrency token, which is now tracked as usual by EF along with the rest of the properties.
@@ -123,10 +123,10 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 Since this property isn't database-generated, you must assign it in application whenever persisting changes:
 
 ```c#
-var person = context.People.Single(b => b.FirstName == "John");
+var person = await context.People.SingleAsync(b => b.FirstName == "John");
 person.FirstName = "Paul";
 person.Version = Guid.NewGuid();
-context.SaveChanges();
+await context.SaveChangesAsync();
 ```
 
 If you want a new GUID value to always be assigned, you can do this via a [`SaveChanges` interceptor](xref:core/logging-events-diagnostics/interceptors#savechanges-interception). However, one advantage of manually managing the concurrency token is that you can control precisely when it gets regenerated, to avoid needless concurrency conflicts.
@@ -145,7 +145,7 @@ There are three sets of values available to help resolve a concurrency conflict:
 - **Original values** are the values that were originally retrieved from the database, before any edits were made.
 - **Database values** are the values currently stored in the database.
 
-The general approach to handle a concurrency conflicts is:
+The general approach to handle a concurrency conflict is:
 
 1. Catch `DbUpdateConcurrencyException` during `SaveChanges`.
 2. Use `DbUpdateConcurrencyException.Entries` to prepare a new set of changes for the affected entities.
@@ -163,7 +163,7 @@ Optimistic concurrency via concurrency tokens isn't the only way to ensure that 
 One mechanism to ensure consistency is the *repeatable reads* transaction isolation level. In most databases, this level guarantees that a transaction sees data in the database as it was when the transaction started, without being affected by any subsequent concurrent activity. Taking our basic sample from above, when we query for the `Person` in order to update it in some way, the database must make sure no other transactions interfere with that database row until the transaction completes. Depending on your database implementation, this happens in one of two ways:
 
 1. When the row is queried, your transaction takes a shared lock on it. Any external transaction attempting to update the row will block until your transaction completes. This is a form of pessimistic locking, and is implemented by the SQL Server "repeatable read" isolation level.
-2. Rather than locking, the database allows the external transaction to update the row, but when your own transaction attempts to do the update it, a "serialization" error will be raised, indicating that a concurrency conflict occurred. This is a form of optimistic locking - not unlike EF's concurrency token feature - and is implemented by the SQL Server snapshot isolation level, as well as by the PostgreSQL repeatable reads isolation level.
+2. Rather than locking, the database allows the external transaction to update the row, but when your own transaction attempts to do the update, a "serialization" error will be raised, indicating that a concurrency conflict occurred. This is a form of optimistic locking - not unlike EF's concurrency token feature - and is implemented by the SQL Server snapshot isolation level, as well as by the PostgreSQL repeatable reads isolation level.
 
 Note that the "serializable" isolation level provides the same guarantees as repeatable read (and adds additional ones), so it functions in the same way with respect to the above.
 
